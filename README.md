@@ -5,12 +5,14 @@
 var table = Study_Area
 
 // Specify the start and end dates for the data extraction period.
+
 var startDate = '2022-01-01'; // Start date of the period you're interested in
 var endDate = '2022-12-31'; // End date of the period you're interested in
 
 // Load the MODIS AOD dataset.
 // Replace 'MODIS/006/MCD19A2_GRANULES' with the specific AOD dataset you're interested in.
 // Ensure the dataset and variable names are correct.
+
 var dataset = ee.ImageCollection('MODIS/006/MCD19A2_GRANULES')
                 .filterDate(startDate, endDate)
                 .filterBounds(table);
@@ -19,12 +21,12 @@ var dataset = ee.ImageCollection('MODIS/006/MCD19A2_GRANULES')
 
 var scaledAOD = dataset.map(function(image) {
   var aod = image.select('Optical_Depth_047').multiply(0.001).clip(table); // Scaling down AOD values
-  
-  return aod.copyProperties(image, ['system:time_start']);
+    return aod.copyProperties(image, ['system:time_start']);
 });
 
 // Visualizing the AOD data over Ohio.
 // Define visualization parameters.
+
 var visParams = {
   min: 0.0,
   max: 0.6,
@@ -32,11 +34,13 @@ var visParams = {
 };
 
 // Add the scaled AOD layer to the map.
+
 Map.centerObject(table, 6); // Adjust the zoom level to your preference.
 Map.addLayer(scaledAOD.mean(), visParams, 'Mean AOD');
 
 // Calculate monthly averages
-var months = ee.List.sequence(1, 12); // A list of months from 1 to 12
+
+var months = ee.List.sequence(1, 12);  // A list of months from 1 to 12
 var monthlyAverages = ee.FeatureCollection(months.map(function(month) {
   var filteredMonth = scaledAOD.filter(ee.Filter.calendarRange(month, month, 'month'));
   var mean = filteredMonth.mean();
@@ -50,6 +54,7 @@ var monthlyAverages = ee.FeatureCollection(months.map(function(month) {
 }));
 
 // Export the monthly averages as a CSV file
+
 Export.table.toDrive({
   collection: monthlyAverages,
   description: 'Monthly_AOD_Averages_Ohio_2022',
@@ -57,6 +62,7 @@ Export.table.toDrive({
 });
 
 // Optionally, export the AOD data for Ohio.
+
 Export.image.toDrive({
   image: scaledAOD.mean(),
   description: 'AOD_Over_Ohio20220101_20221230',
